@@ -28,7 +28,7 @@ public class OrderService {
         // Check Inventory
         BaseResponseDTO result = webClientBuilder.build()
                 .post()
-                .uri("http://localhost:8083/api/inventories/in-stock")
+                .uri("lb://inventory-service/api/inventories/in-stock")
                 .bodyValue(orderRequest.getOrderItems())
                 .retrieve()
                 .bodyToMono(BaseResponseDTO.class)
