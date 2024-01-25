@@ -24,7 +24,7 @@ public class OrderService {
         return orders.stream().map(this::mapToOrderResponse).toList();
     }
 
-    public void save(OrderRequestDTO orderRequest) {
+    public OrderResponseDTO save(OrderRequestDTO orderRequest) {
         // Check Inventory
         BaseResponseDTO result = webClientBuilder.build()
                 .post()
@@ -46,6 +46,7 @@ public class OrderService {
 
             // Save Order
             Order savedOrder = orderRepository.save(order);
+            return mapToOrderResponse(savedOrder);
         } else {
             throw new IllegalArgumentException("Some of the products are not in stock.");
         }
