@@ -3,8 +3,12 @@ package com.zair.orders_service.services;
 import com.zair.orders_service.dtos.*;
 import com.zair.orders_service.entities.Order;
 import com.zair.orders_service.entities.OrderItem;
+import com.zair.orders_service.enums.OrderStatus;
+import com.zair.orders_service.events.OrderEvent;
 import com.zair.orders_service.repositories.OrderRepository;
+import com.zair.orders_service.utils.JsonUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -18,6 +22,8 @@ public class OrderService {
     private final OrderRepository orderRepository;
 
     private final WebClient.Builder webClientBuilder;
+
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     public List<OrderResponseDTO> findAll() {
         List<Order> orders = orderRepository.findAll();
@@ -46,6 +52,16 @@ public class OrderService {
 
             // Save Order
             Order savedOrder = orderRepository.save(order);
+
+            // Order Topic
+            OrderEvent orderEvent = new OrderEvent(
+                    savedOrder.getOrderNumber(),
+                    savedOrder.getOrderItems().size(),
+                    OrderStatus.PLACED
+            );
+
+            kafkaTemplate.send("orders-topic", JsonUtil.toJSON(orderEvent));
+
             return mapToOrderResponse(savedOrder);
         } else {
             throw new IllegalArgumentException("Some of the products are not in stock.");
