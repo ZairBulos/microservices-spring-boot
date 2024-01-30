@@ -28,11 +28,14 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth ->
-                        auth.anyRequest().authenticated()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(request -> request
+                                .getRequestURI().contains("/actuator/products")
+                        ).permitAll()
+                        .anyRequest().authenticated()
                 )
-                .oauth2ResourceServer(configure ->
-                        configure.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter()))
+                .oauth2ResourceServer(configure -> configure
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthConverter()))
                 );
 
         return http.build();
